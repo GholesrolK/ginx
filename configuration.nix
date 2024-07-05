@@ -61,8 +61,8 @@
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
  
-
-
+ hardware.bluetooth.enable = true; 
+ hardware.bluetooth.powerOnBoot = true; 
   programs.hyprland = {
   enable = true ;
   
@@ -144,10 +144,9 @@ services.pipewire = {
   #  wget
  wget 
 git 
-kitty
+foot
 hyprpaper
 hyprlock 
-lf
 waybar
 dunst
 libnotify
@@ -186,8 +185,49 @@ bottles
 heroic
 lutris
 protonup
+pywalfox-native
+blueberry
+ags
+kanshi
+bibata-cursors
+bibata-cursors-translucent
+vesktop
+playerctl
+brightnessctl
+pw-volume
+cascadia-code
+swaylock
+swww
+adw-gtk3
+morewaita-icon-theme
+dart-sass
+nodejs_22
+nodePackages.ts-node
+gjs
+gnomeExtensions.eval-gjs
+gtk3
+gtk-layer-shell
+libdbusmenu-gtk3
+gobject-introspection
+gtop
+zip
+unzip
+gtksourceview
+webkitgtk
+libgtop
+matugen
+nwg-look
+adwaita-qt
+adwaita-qt6
+gnome.adwaita-icon-theme
+themechanger
 
+kdePackages.qt6ct
 ];
+environment.variables = {
+GI_TYPELIB_PATH = "/run/current-system/sw/lib/girepository-1.0";
+};
+
 programs.steam.enable = true;
 programs.steam.gamescopeSession.enable = true;
 programs.gamemode.enable = true;
@@ -204,6 +244,7 @@ fonts.packages = with pkgs; [
   proggyfonts
   font-awesome
   jetbrains-mono
+  cascadia-code
 ];
 
   # Some programs need SUID wrappers, can be configured further or are
