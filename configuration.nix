@@ -66,7 +66,7 @@ services.greetd = {
   enable = true;
   settings = {
     default_session = {
-      command = "${pkgs.greetd.tuigreet}/bin/tuigreet --theme 'border=magenta;text=cyan;prompt=green;time=red;action=blue;button=yellow;container=black;input=red' --time -r --cmd /home/ahmed/startHypr ";
+      command = "${pkgs.greetd.tuigreet}/bin/tuigreet --theme 'border=magenta;text=cyan;prompt=green;time=red;action=blue;button=yellow;container=black;input=red' --time -r --cmd startx ";
       user = "greeter";
     };
   };
