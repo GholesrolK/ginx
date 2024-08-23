@@ -11,8 +11,26 @@
     ];
 
   # Bootloader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+ 
+  boot = {
+   loader.systemd-boot.enable = true;
+   loader.efi.canTouchEfiVariables = true;
+   loader.timeout = 0;
+};
+console = {
+    earlySetup = true;
+    keyMap = "us";
+    colors = [
+    "2E3440"
+    "BC567F"
+    "A3BE8C"
+    "D8A6AD"
+    "5E81AC"
+    "BF616A"
+    "ECEFF4"
+    "FFFFFF"
+    ];
+  };
 
   networking.hostName = "GholesrolK"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -43,6 +61,17 @@
   };
   fonts.fontDir.enable = true ;	
   services.xserver.enable = true ;
+
+services.greetd = {
+  enable = true;
+  settings = {
+    default_session = {
+      command = "${pkgs.greetd.tuigreet}/bin/tuigreet --theme 'border=magenta;text=cyan;prompt=green;time=red;action=blue;button=yellow;container=black;input=red' --time -r --cmd /home/ahmed/startHypr ";
+      user = "greeter";
+    };
+  };
+};
+
   services.xserver.displayManager.startx.enable = true ;
   # Configure keymap in X11
   services.xserver = {
@@ -86,31 +115,29 @@
     # Modesetting is required.
     modesetting.enable = true;
 
-    # Nvidia power management. Experimental, and can cause sleep/suspend to fail.
-    # Enable this if you have graphical corruption issues or application crashes after waking
-    # up from sleep. This fixes it by saving the entire VRAM memory to /tmp/ instead 
-    # of just the bare essentials.
+
     powerManagement.enable = false;
 
-    # Fine-grained power management. Turns off GPU when not in use.
-    # Experimental and only works on modern Nvidia GPUs (Turing or newer).
     powerManagement.finegrained = false;
 
-    # Use the NVidia open source kernel module (not to be confused with the
-    # independent third-party "nouveau" open source driver).
-    # Support is limited to the Turing and later architectures. Full list of 
-    # supported GPUs is at: 
-    # https://github.com/NVIDIA/open-gpu-kernel-modules#compatible-gpus 
-    # Only available from driver 515.43.04+
-    # Currently alpha-quality/buggy, so false is currently the recommended setting.
-    open = false;
 
-    # Enable the Nvidia settings menu,
-	# accessible via `nvidia-settings`.
+    open = true;
+
     nvidiaSettings = true;
 
-    # Optionally, you may need to select the appropriate driver version for your specific GPU.
     package = config.boot.kernelPackages.nvidiaPackages.stable;
+
+
+    prime = {
+	 
+   offload = {
+			enable = true;
+			enableOffloadCmd = true;
+		};
+		intelBusId = "PCI:0:2:0";
+		nvidiaBusId = "PCI:1:0:0";
+                
+	  };
   };
   services.xserver.dpi = 96;
   environment.variables = {
@@ -127,7 +154,7 @@ xdg.portal = {
 };
 
 
-sound.enable = true ;
+
 security.rtkit.enable = true ;
 services.pipewire = {
   enable = true ;
@@ -144,15 +171,18 @@ services.pipewire = {
   #  wget
  wget 
 git 
+lshw
 foot
+greetd.tuigreet
 hyprpaper
 hyprlock 
+cage
 waybar
 dunst
 libnotify
-wofi
 firefox
 neofetch
+picom
 meson 
 wayland-protocols
 wayland-utils
@@ -209,7 +239,7 @@ gtk3
 gtk-layer-shell
 libdbusmenu-gtk3
 gobject-introspection
-gtop
+gotop
 zip
 unzip
 gtksourceview
@@ -219,10 +249,13 @@ matugen
 nwg-look
 adwaita-qt
 adwaita-qt6
-gnome.adwaita-icon-theme
+adwaita-icon-theme
 themechanger
-
+cava
+networkmanagerapplet
+qbittorrent
 kdePackages.qt6ct
+docker-compose
 ];
 environment.variables = {
 GI_TYPELIB_PATH = "/run/current-system/sw/lib/girepository-1.0";
@@ -261,7 +294,15 @@ fonts.packages = with pkgs; [
 
   # Enable the OpenSSH daemon.
    services.openssh.enable = true;
+   #DOCKER 
+   virtualisation.docker.enable = true;
+   users.extraGroups.docker.members = [ "ahmed" ];
 
+   #OLLAMA
+   services.ollama = {
+  enable = true;
+  acceleration = "cuda";
+};
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
