@@ -2,21 +2,26 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ inputs, config, pkgs, ... }:
 
 {
+  
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
     ];
 
   # Bootloader.
- 
+
   boot = {
    loader.systemd-boot.enable = true;
    loader.efi.canTouchEfiVariables = true;
    loader.timeout = 0;
+   loader.systemd-boot.configurationLimit = 5;
 };
+
+
+
 console = {
     earlySetup = true;
     keyMap = "us";
@@ -61,7 +66,6 @@ console = {
   };
   fonts.fontDir.enable = true ;	
   services.xserver.enable = true ;
-
 services.greetd = {
   enable = true;
   settings = {
@@ -75,8 +79,8 @@ services.greetd = {
   services.xserver.displayManager.startx.enable = true ;
   # Configure keymap in X11
   services.xserver = {
-    layout = "us";
-    xkbVariant = "";
+    xkb.layout = "us";
+    xkb.variant = "";
   };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
@@ -92,11 +96,7 @@ services.greetd = {
  
  hardware.bluetooth.enable = true; 
  hardware.bluetooth.powerOnBoot = true; 
-  programs.hyprland = {
-  enable = true ;
-  
-  xwayland.enable = true;
-  };
+
   services.xserver.windowManager.dwm.enable = true ;
   nixpkgs.overlays = [
       (final : prev: {
@@ -105,11 +105,22 @@ services.greetd = {
   dmenu = prev.dmenu.overrideAttrs (old : { src = /home/ahmed/src/dmenu ; } ); 
    
 }) 
+
+
 ];
   hardware = {
   opengl.enable = true ; 
 
  };
+
+ nix.settings.trusted-users = [ "root" "ahmed" ];
+ nix.settings.auto-optimise-store = true;
+ nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 1w";
+  };
+
  hardware.nvidia = {
 
     # Modesetting is required.
@@ -140,22 +151,33 @@ services.greetd = {
 	  };
   };
   services.xserver.dpi = 96;
-  environment.variables = {
-    GDK_SCALE = "0.5";
-  };
+  
 services.xserver.videoDrivers = ["nvidia"];
 
-xdg.portal = {
-   enable = true ;
-   wlr.enable = true  ; 
-   extraPortals = [
-   pkgs.xdg-desktop-portal-gtk
-];
-};
+  services.picom = {
+    enable = true;
+  };
+
+
+
+ qt.enable = true;
+  qt.platformTheme = "gtk2";
+  qt.style = "gtk2";
+
+security.polkit.enable = true;
+security.polkit.extraConfig = ''
+    polkit.addRule(function(action, subject) {
+      if (subject.isInGroup("wheel"))
+        return polkit.Result.YES;
+    });
+  '';
 
 
 
 security.rtkit.enable = true ;
+
+
+
 services.pipewire = {
   enable = true ;
   alsa.enable = true ; 
@@ -163,7 +185,15 @@ services.pipewire = {
   pulse.enable = true ;
   jack.enable = true ;
 };
+ programs.thunar.enable = true;
+ programs.thunar.plugins = with pkgs.xfce; [ 
+  thunar-archive-plugin 
+  thunar-volman
 
+   ];
+   
+  services.gvfs.enable = true;
+  
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
@@ -174,7 +204,6 @@ git
 lshw
 foot
 greetd.tuigreet
-hyprpaper
 hyprlock 
 cage
 waybar
@@ -182,18 +211,12 @@ dunst
 libnotify
 firefox
 neofetch
-picom
 meson 
 wayland-protocols
 wayland-utils
 wl-clipboard
-wlroots
-xdg-desktop-portal-gtk
-xdg-desktop-portal-hyprland
-st
 dwmblocks
 dmenu
-xfce.thunar
 pavucontrol
 lxappearance
 zuki-themes 
@@ -208,8 +231,6 @@ lm_sensors
 discord
 caprine-bin
 ntfs3g
-gvfs
-xfce.thunar-volman
 jq
 bottles
 heroic
@@ -219,8 +240,6 @@ pywalfox-native
 blueberry
 ags
 kanshi
-bibata-cursors
-bibata-cursors-translucent
 vesktop
 playerctl
 brightnessctl
@@ -239,7 +258,7 @@ gtk3
 gtk-layer-shell
 libdbusmenu-gtk3
 gobject-introspection
-gotop
+btop
 zip
 unzip
 gtksourceview
@@ -249,17 +268,42 @@ matugen
 nwg-look
 adwaita-qt
 adwaita-qt6
-adwaita-icon-theme
 themechanger
 cava
 networkmanagerapplet
 qbittorrent
 kdePackages.qt6ct
 docker-compose
+pcsx2
+kitty
+stalonetray
+killall
+gpu-screen-recorder
+gpu-screen-recorder-gtk
+lf
+polkit_gnome
+xdg-desktop-portal-gtk
+bibata-cursors
+adwaita-icon-theme
 ];
+
+
 environment.variables = {
 GI_TYPELIB_PATH = "/run/current-system/sw/lib/girepository-1.0";
+GDK_SCALE = "0.5";
+WLR_NO_HARDWARE_CURSORS = "1";
+NIXOS_OZONE_WL = "1";
+
+
 };
+
+xdg.portal.enable = true;
+xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+  programs.hyprland = {
+    enable = true;
+    xwayland.enable = true;
+  };
+
 
 programs.steam.enable = true;
 programs.steam.gamescopeSession.enable = true;
@@ -317,7 +361,7 @@ fonts.packages = with pkgs; [
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
 
 
-  system.stateVersion = "unstable"; # Did you read the comment?
+  system.stateVersion = "24.05"; # Did you read the comment?
   nix.settings.experimental-features = ["nix-command" "flakes"];
 
 }
