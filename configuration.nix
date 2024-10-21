@@ -18,6 +18,7 @@
    loader.efi.canTouchEfiVariables = true;
    loader.timeout = 0;
    loader.systemd-boot.configurationLimit = 5;
+   kernelPackages = pkgs.linuxPackages_latest;
 };
 
 
@@ -109,7 +110,7 @@ services.greetd = {
 
 ];
   hardware = {
-  opengl.enable = true ; 
+  graphics.enable = true ; 
 
  };
 
@@ -176,6 +177,7 @@ security.polkit.extraConfig = ''
 
 security.rtkit.enable = true ;
 
+services.flatpak.enable = true;
 
 
 services.pipewire = {
@@ -204,7 +206,8 @@ git
 lshw
 foot
 greetd.tuigreet
-hyprlock 
+hyprlock
+hypridle
 cage
 waybar
 dunst
@@ -262,7 +265,6 @@ btop
 zip
 unzip
 gtksourceview
-webkitgtk
 libgtop
 matugen
 nwg-look
@@ -285,6 +287,11 @@ polkit_gnome
 xdg-desktop-portal-gtk
 bibata-cursors
 adwaita-icon-theme
+mpv
+xarchiver
+rar
+winetricks
+
 ];
 
 
@@ -307,6 +314,7 @@ xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
 
 programs.steam.enable = true;
 programs.steam.gamescopeSession.enable = true;
+programs.steam.protontricks.enable = true;
 programs.gamemode.enable = true;
 
 fonts.packages = with pkgs; [
