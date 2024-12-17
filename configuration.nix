@@ -18,11 +18,14 @@
    loader.efi.canTouchEfiVariables = true;
    loader.timeout = 0;
    loader.systemd-boot.configurationLimit = 5;
-   kernelPackages = pkgs.linuxPackages_latest;
+
 };
 
 
 
+
+
+nixpkgs.config.allowBroken = true; 
 console = {
     earlySetup = true;
     keyMap = "us";
@@ -71,7 +74,7 @@ services.greetd = {
   enable = true;
   settings = {
     default_session = {
-      command = "${pkgs.greetd.tuigreet}/bin/tuigreet --theme 'border=magenta;text=cyan;prompt=green;time=red;action=blue;button=yellow;container=black;input=red' --time -r --cmd startx ";
+      command = "${pkgs.greetd.tuigreet}/bin/tuigreet --theme 'border=magenta;text=cyan;prompt=green;time=red;action=blue;button=yellow;container=black;input=red' --time -r --cmd Hyprland";
       user = "greeter";
     };
   };
@@ -96,8 +99,9 @@ services.greetd = {
   nixpkgs.config.allowUnfree = true;
  
  hardware.bluetooth.enable = true; 
+ 
  hardware.bluetooth.powerOnBoot = true; 
-
+ hardware.xone.enable = true;
   services.xserver.windowManager.dwm.enable = true ;
   nixpkgs.overlays = [
       (final : prev: {
@@ -173,13 +177,21 @@ security.polkit.extraConfig = ''
     });
   '';
 
+systemd.services.my-openvpn = {
+  description = "personal vpn";
+  wantedBy = [ "multi-user.target" ];
+  serviceConfig = {
+    ExecStart = "${pkgs.openvpn}/bin/openvpn  /home/ahmed/gholeLaptop.ovpn";
+  };
+};
 
 
 security.rtkit.enable = true ;
 
 services.flatpak.enable = true;
+  programs.java = { enable = true; package = pkgs.jdk21.override { enableJavaFX = true; }; };
 
-
+ programs.nix-ld.enable = true;
 services.pipewire = {
   enable = true ;
   alsa.enable = true ; 
@@ -201,7 +213,8 @@ services.pipewire = {
   environment.systemPackages = with pkgs; [
   #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
   #  wget
- wget 
+home-manager
+wget 
 git 
 lshw
 foot
@@ -221,11 +234,11 @@ wl-clipboard
 dwmblocks
 dmenu
 pavucontrol
+openvpn
 lxappearance
 zuki-themes 
 vscodium
 font-awesome
-luna-icons
 xwallpaper
 xdotool
 feh
@@ -256,7 +269,6 @@ dart-sass
 nodejs_22
 nodePackages.ts-node
 gjs
-gnomeExtensions.eval-gjs
 gtk3
 gtk-layer-shell
 libdbusmenu-gtk3
@@ -291,7 +303,8 @@ mpv
 xarchiver
 rar
 winetricks
-
+hyprshot
+mono
 ];
 
 
@@ -306,11 +319,12 @@ NIXOS_OZONE_WL = "1";
 
 xdg.portal.enable = true;
 xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
-  programs.hyprland = {
+programs.hyprland = {
     enable = true;
+    withUWSM = true;
     xwayland.enable = true;
+    package = inputs.hyprland.packages."${pkgs.system}".hyprland;
   };
-
 
 programs.steam.enable = true;
 programs.steam.gamescopeSession.enable = true;
@@ -319,7 +333,7 @@ programs.gamemode.enable = true;
 
 fonts.packages = with pkgs; [
   noto-fonts
-  noto-fonts-cjk
+  noto-fonts-cjk-sans
   noto-fonts-emoji
   liberation_ttf
   fira-code
@@ -327,6 +341,7 @@ fonts.packages = with pkgs; [
   mplus-outline-fonts.githubRelease
   dina-font
   proggyfonts
+  nerd-fonts.jetbrains-mono
   font-awesome
   jetbrains-mono
   cascadia-code
@@ -345,7 +360,17 @@ fonts.packages = with pkgs; [
   # List services that you want to enable:
 
   # Enable the OpenSSH daemon.
-   services.openssh.enable = true;
+   services.openssh =  {
+  enable = true;
+  ports = [ 22 ];
+  settings = {
+    PasswordAuthentication = true;
+    AllowUsers = null; # Allows all users by default. Can be [ "user1" "user2" ]
+    UseDns = true;
+    X11Forwarding = false;
+    PermitRootLogin = "prohibit-password"; # "yes", "without-password", "prohibit-password", "forced-commands-only", "no"
+  };
+};
    #DOCKER 
    virtualisation.docker.enable = true;
    users.extraGroups.docker.members = [ "ahmed" ];
@@ -369,7 +394,7 @@ fonts.packages = with pkgs; [
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
 
 
-  system.stateVersion = "24.05"; # Did you read the comment?
+  system.stateVersion = "24.11"; # Did you read the comment?
   nix.settings.experimental-features = ["nix-command" "flakes"];
 
 }
