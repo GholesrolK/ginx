@@ -18,11 +18,13 @@
    loader.efi.canTouchEfiVariables = true;
    loader.timeout = 0;
    loader.systemd-boot.configurationLimit = 5;
+   kernelPackages = pkgs.linuxPackages_cachyos;
+  
 
 };
 
-
-
+services.scx.enable = false;
+#services.scx.scheduler = "scx_rusty";
 
 
 nixpkgs.config.allowBroken = true; 
@@ -70,7 +72,7 @@ console = {
   };
   fonts.fontDir.enable = true ;	
   services.xserver.enable = true ;
-services.greetd = {
+  services.greetd = {
   enable = true;
   settings = {
     default_session = {
@@ -91,10 +93,23 @@ services.greetd = {
   users.users.ahmed = {
     isNormalUser = true;
     description = "ahmed";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [ "networkmanager" "wheel" "libvirtd"  ];
     packages = with pkgs; [];
   };
-
+  security.sudo.extraRules = [{
+  users = [ "ahmed" ];
+  commands = [{
+    command = "ALL";
+    options = [ "NOPASSWD" ];
+  }];
+}];
+security.polkit.enable = true;
+security.polkit.extraConfig = ''
+    polkit.addRule(function(action, subject) {
+      if (subject.isInGroup("wheel"))
+        return polkit.Result.YES;
+    });
+  '';
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
  
@@ -102,17 +117,12 @@ services.greetd = {
  
  hardware.bluetooth.powerOnBoot = true; 
  hardware.xone.enable = true;
-  services.xserver.windowManager.dwm.enable = true ;
-  nixpkgs.overlays = [
-      (final : prev: {
-  dwm = prev.dwm.overrideAttrs (old : { src = /home/ahmed/src/dwm ; } );
-  dwmblocks = prev.dwmblocks.overrideAttrs (old : { src = /home/ahmed/src/dwmblocks ; } );
-  dmenu = prev.dmenu.overrideAttrs (old : { src = /home/ahmed/src/dmenu ; } ); 
-   
-}) 
+
+ 
 
 
-];
+
+
   hardware = {
   graphics.enable = true ; 
 
@@ -132,7 +142,7 @@ services.greetd = {
     modesetting.enable = true;
 
 
-    powerManagement.enable = false;
+    powerManagement.enable = true;
 
     powerManagement.finegrained = false;
 
@@ -144,39 +154,10 @@ services.greetd = {
     package = config.boot.kernelPackages.nvidiaPackages.stable;
 
 
-    prime = {
-	 
-   offload = {
-			enable = true;
-			enableOffloadCmd = true;
-		};
-		intelBusId = "PCI:0:2:0";
-		nvidiaBusId = "PCI:1:0:0";
-                
-	  };
+    
   };
-  services.xserver.dpi = 96;
-  
+services.xserver.dpi = 96;
 services.xserver.videoDrivers = ["nvidia"];
-
-  services.picom = {
-    enable = true;
-  };
-
-
-
- qt.enable = true;
-  qt.platformTheme = "gtk2";
-  qt.style = "gtk2";
-
-security.polkit.enable = true;
-security.polkit.extraConfig = ''
-    polkit.addRule(function(action, subject) {
-      if (subject.isInGroup("wheel"))
-        return polkit.Result.YES;
-    });
-  '';
-
 systemd.services.my-openvpn = {
   description = "personal vpn";
   wantedBy = [ "multi-user.target" ];
@@ -184,9 +165,6 @@ systemd.services.my-openvpn = {
     ExecStart = "${pkgs.openvpn}/bin/openvpn  /home/ahmed/gholeLaptop.ovpn";
   };
 };
-
-
-security.rtkit.enable = true ;
 
 services.flatpak.enable = true;
   programs.java = { enable = true; package = pkgs.jdk21.override { enableJavaFX = true; }; };
@@ -214,10 +192,11 @@ services.pipewire = {
   #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
   #  wget
 home-manager
+git-lfs
 wget 
 git 
 lshw
-foot
+gowall
 greetd.tuigreet
 hyprlock
 hypridle
@@ -231,8 +210,6 @@ meson
 wayland-protocols
 wayland-utils
 wl-clipboard
-dwmblocks
-dmenu
 pavucontrol
 openvpn
 lxappearance
@@ -244,11 +221,9 @@ xdotool
 feh
 pywal
 lm_sensors
-discord
 caprine-bin
 ntfs3g
 jq
-bottles
 heroic
 lutris
 protonup
@@ -294,7 +269,11 @@ stalonetray
 killall
 gpu-screen-recorder
 gpu-screen-recorder-gtk
-lf
+lf    
+bat                      
+chafa                       
+viu                         
+ueberzugpp                 
 polkit_gnome
 xdg-desktop-portal-gtk
 bibata-cursors
@@ -304,10 +283,31 @@ xarchiver
 rar
 winetricks
 hyprshot
+hyprcursor
 mono
+kdePackages.kdenlive
+rofi-wayland
+rofi-emoji-wayland
+libreoffice
+gimp
+teamspeak3
+flat-remix-gtk
+nextcloud-client
+nethogs
 ];
 
-
+programs.foot = {
+  enable = true;
+  settings = {
+    main = {
+      term = "xterm-256color";
+      font = "monospace:size=12";
+      dpi-aware = "yes";
+      sixel-support = "yes";       
+      kitty-graphics = "yes";     
+    };
+  };
+};
 environment.variables = {
 GI_TYPELIB_PATH = "/run/current-system/sw/lib/girepository-1.0";
 GDK_SCALE = "0.5";
@@ -317,11 +317,11 @@ NIXOS_OZONE_WL = "1";
 
 };
 
+
 xdg.portal.enable = true;
 xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
 programs.hyprland = {
     enable = true;
-    withUWSM = true;
     xwayland.enable = true;
     package = inputs.hyprland.packages."${pkgs.system}".hyprland;
   };
@@ -375,11 +375,32 @@ fonts.packages = with pkgs; [
    virtualisation.docker.enable = true;
    users.extraGroups.docker.members = [ "ahmed" ];
 
-   #OLLAMA
-   services.ollama = {
+  virtualisation.docker.extraOptions = "--add-runtime nvidia=/run/current-system/sw/bin/nvidia-container-runtime";
+
+  #VIRTUALIZATION
+virtualisation.libvirtd = {
   enable = true;
-  acceleration = "cuda";
+  qemu = {
+    package = pkgs.qemu_kvm;
+    runAsRoot = true;
+    swtpm.enable = true;
+    ovmf = {
+      enable = true;
+      packages = [(pkgs.OVMF.override {
+        secureBoot = true;
+        tpmSupport = true;
+      }).fd];
+    };
+  };
 };
+programs.virt-manager.enable = true;
+#services.ollama = {
+#  enable = true;
+#  acceleration = "cuda";
+#};
+
+
+
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
@@ -394,7 +415,7 @@ fonts.packages = with pkgs; [
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
 
 
-  system.stateVersion = "24.11"; # Did you read the comment?
+  system.stateVersion = "23.11"; # Did you read the comment?
   nix.settings.experimental-features = ["nix-command" "flakes"];
 
 }

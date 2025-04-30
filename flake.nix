@@ -5,6 +5,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
     hyprland.url = "github:hyprwm/Hyprland";
     hyprland-plugins = {
       url = "github:hyprwm/hyprland-plugins";
@@ -18,7 +19,7 @@
 
    
 
-  outputs = {self , nixpkgs , ... } @ inputs :
+  outputs = {self , nixpkgs ,chaotic , ... } @ inputs :
 let 
 lib = nixpkgs.lib;
   
@@ -28,7 +29,9 @@ in {
     GholesrolK = lib.nixosSystem {
      system = "x86_64-linux";
      specialArgs = { inherit inputs; };
-     modules = [ ./configuration.nix ];
+     modules = [ ./configuration.nix
+       chaotic.nixosModules.default      
+      ];
      
 
 };
