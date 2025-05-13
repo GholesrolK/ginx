@@ -23,8 +23,11 @@
 
 };
 
-services.scx.enable = false;
-#services.scx.scheduler = "scx_rusty";
+services.scx.enable = true;
+services.scx.scheduler = "scx_lavd";
+services.scx.extraArgs = [
+"--performance"
+];
 
 
 nixpkgs.config.allowBroken = true; 
@@ -167,7 +170,7 @@ systemd.services.my-openvpn = {
 };
 
 services.flatpak.enable = true;
-  programs.java = { enable = true; package = pkgs.jdk21.override { enableJavaFX = true; }; };
+  programs.java = { enable = true; package = pkgs.jdk.override { enableJavaFX = true; }; };
 
  programs.nix-ld.enable = true;
 services.pipewire = {
